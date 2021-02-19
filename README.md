@@ -1,5 +1,5 @@
 # [Gamemakin](https://gamemak.in) UE4 Style Guide() {
-# R9 Edition
+## R9 Edition
 
 *A mostly reasonable approach to Unreal Engine 4*
 
@@ -18,20 +18,6 @@ More technical documentation regarding Linter and the Style Guide can be found a
 ## Discuss This Style Guide
 
 Gamemakin LLC has a public Discord channel at http://discord.gamemak.in with a #linter channel if you'd like to discuss all things style guide and Linter plugin.
-
-## Linking To This Document
-
-Every section of this style guide is numbered for both easy reference and easy linking. You can link to any section directly by simply append a hash tag and the section number to the end of http://ue4.style
-For example, if you want to send someone to the first principle of this style guide you would append `#0.1`, resulting in http://ue4.style#0.1.
-
-## Forks And Translations
-
-If you have made a notable fork or translation that is not suitable for a pull request into this repo, please submit a pull request to add the fork or translation here.
-
-* [Korean Translation](https://github.com/ymkim50/ue4-style-guide/blob/master/README_Kor.md) by ymkim50
-* [Russian Translation](https://github.com/CosmoMyzrailGorynych/ue4-style-guide-rus/blob/master/README.md) by CosmoMyzrailGorynych
-* [Japanese Translation](https://github.com/akenatsu/ue4-style-guide/blob/master/README.jp.md) by akenatsu
-* [Chinese Translation](https://github.com/skylens-inc/ue4-style-guide/blob/master/README.md) by Beijing Skylens Tech.
 
 ## Important Terminology
 
@@ -703,6 +689,8 @@ Remember: Blueprinting badly bears blunders, beware! (Phrase by [KorkuVeren](htt
 
 > 3.4 [Graphs](#bp-graphs)
 
+> 3.5 [Architecture](#bp-architecture)
+
 <a name="3.1"></a>
 <a name="bp-compiling"></a>
 ### 3.1 Compiling ![#](https://img.shields.io/badge/lint-supported-green.svg)
@@ -734,6 +722,8 @@ The words `variable` and `property` may be used interchangeably.
 > 3.2.6 [Transient](#bp-vars-transient)
 
 > 3.2.7 [Config](#bp-vars-config)
+
+> 3.2.8 [Local](#bp-vars-local)
 
 <a name="3.2.1"></a>
 <a name="bp-var-naming"></a>
@@ -871,6 +861,10 @@ Arrays follow the same naming rules as above, but should be named as a plural no
 
 Example: Use `Targets`, `Hats`, and `EnemyPlayers`, **not** `TargetList`, `HatArray`, `EnemyPlayerArray`.
 
+##### 3.2.1.9 Name Local Variables Distinctly ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+Name your local variables starting with Local, e.g. LocalHero, except in cases where it would make the name very long.
+Anyone reading the function knows the scope of this variable (it only exists during this function) when they see it used in the function.
 
 <a name="3.2.2"></a>
 <a name="bp-vars-editable"></a>
@@ -930,15 +924,19 @@ Example: A weapon class set of variables might be organized as:
 
 In C++, variables have a concept of access level. Public means any code outside the class can access the variable. Protected means only the class and any child classes can access this variable internally. Private means only this class and no child classes can access this variable.
 
-Blueprints do not have a defined concept of protected access currently.
-
-Treat `Editable` variables as public variables. Treat non-editable variables as protected variables.
-
 <a name="3.2.4.1"></a>
 <a name="bp-vars-access-private"></a>
 ##### 3.2.4.1 Private Variables ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
 
-Unless it is known that a variable should only be accessed within the class it is defined and never a child class, do not mark variables as private. Until variables are able to be marked `protected`, reserve private for when you absolutely know you want to restrict child class usage.
+To protect variables in your Blueprint from modification or reading from outside, use the Private checkbox, and provide Getters and Setters for other Blueprints to talk to yours. Then on the Getters and Setters.
+
+![Private Variable](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-variables-private.png "Private Variable")
+
+* This means your Blueprint is responsible for managing its own state.
+* Then provide a Getter (e.g. IsForceHeld which returns True or False).
+* And provide a Setter if you wish to allow other BPs access (e.g. SetForceHeld).
+* As long as other BPs only use the functions you expose, any changes you make to your BP won’t break them, provided the calls to your functions can remain the same.
+* Mark Getters and Setters' access level to be Public if you want to expose them or Protected if you only want children class to access them.
 
 <a name="3.2.5"></a>
 <a name="bp-vars-advanced"></a>
@@ -958,9 +956,30 @@ Because of this, all transient variables should always be initialized as zero or
 
 <a name="3.2.7"></a>
 <a name="bp-vars-config"></a>
-#### 3.2.8 Config Variables ![#](https://img.shields.io/badge/lint-supported-green.svg)
+#### 3.2.7 Config Variables ![#](https://img.shields.io/badge/lint-supported-green.svg)
 
 Do not use the `Config Variable` flag. This makes it harder for designers to control blueprint behavior. Config variables should only be used in C++ for rarely changed variables. Think of them as `Advanced Advanced Display` variables.
+
+<a name="3.2.8"></a>
+<a name="bp-vars-local"></a>
+#### 3.2.8 Local Variables ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+Don’t Use Global (Blueprint-wide) Variables When Local Ones Will Do! If you need to save off the result of a calculation as a new variable, but you only need it for the duration of your function, create a new Local Variable inside your function:
+
+![Local Variable creation](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-variables-localvar.png "Local Variable creation")
+
+Name Local Variables Distinctly
+Name your local variables starting with Local, e.g. LocalHero, except in cases where it would make the name very long.
+Anyone reading the function knows the scope of this variable (it only exists during this function) when they see it used in the function.
+
+<a name="3.2.8.1"></a>
+<a name="bp-vars-local-auto"></a>
+##### 3.2.8.1 Automatic Local Variables ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+As of Unreal 4.18+, function parameters automatically become local variables inside functions (see Pip by Pip Refill variable below).
+That means you don’t need to connect the function parameters to other nodes with wires.
+This is one of the best reasons to use functions, along with their implicit reusability, and the ability to return values.
+
+![Auto Local Variables](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-variables-local-auto.png "Auto Local Variables")
 
 <a name="3.3"></a>
 <a name="bp-functions"></a>
@@ -1044,15 +1063,25 @@ Bad examples:
 * `Dead` - Is dead? Will deaden?
 * `Visibility` - Is visible? Set visibility? A description of flying conditions?
 
+Don't repeat your return value if the function name already says it well enough.
+
+For functions that ask questions, name the return value "Result" as default:
+
+![Return value name](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-return-node.png "Return value name")
+
+For other cases, just follow naming conventions of variables, and try to find the simplest way to describe your return variables:
+
+![Return value name details](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-return-node-detailname.png "Return value name details")
+
 <a name="3.3.1.4"></a>
 <a name="bp-funcs-naming-eventhandlers"></a>
 #### 3.3.1.4 Event Handlers and Dispatchers Should Start With `On` ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
 
-Any function that handles an event or dispatches an event should start with `On` and continue to follow [the verb rule](#bp-funcs-naming-verbs). The verb may move to the end however if past-tense reads better.
+Any function or event that handles an event or dispatches an event should start with `On` and continue to follow [the verb rule](#bp-funcs-naming-verbs). The verb may move to the end however if past-tense reads better.
 
 [Collocations](http://dictionary.cambridge.org/us/grammar/british-grammar/about-words-clauses-and-sentences/collocation) of the word `On` are exempt from following the verb rule.
 
-`Handle` is not allowed. It is 'Unreal' to use `On` instead of `Handle`, while other frameworks may prefer to use `Handle` instead of `On`.
+`Handle` is not allowed. We want to reserve it for events/functions that subscribe to Dispatchers.
 
 Good examples:
 
@@ -1070,6 +1099,21 @@ Bad examples:
 * `OnTarget`
 * `HandleMessage`
 * `HandleDeath`
+
+For events/functions that subscribe to Dispatchers, name them with `Handle` to replace the `On` from the Dispatcher's name:
+
+Good examples:
+
+* `HandleDeath`
+* `HandleMessageRecevied`
+
+Plus:
+
+* Always use `CreateEvent` node to minimize wires
+* Try use suffix to solve naming conflicts
+
+![Dispatcher Handler](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-function-dispatch-handler.png "Dispatcher Handler")
+
 
 <a name="3.3.1.5"></a>
 <a name="bp-funcs-naming-rpcs"></a>
@@ -1137,6 +1181,52 @@ If your project includes a plugin that defines `static` `BlueprintCallable` func
 
 For example, `Zed Camera Interface` or `Zed Camera Interface | Image Capturing`.
 
+<a name="3.3.6"></a>
+<a name="bp-func-access"></a>
+#### 3.3.6 Function Access Level ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+Not like [Variable Access Level](#bp-vars-access), Function Access Level is now fully functional in Blueprint as of 4.26.
+
+Functions should be thoughtfully made Private, Protected, or Public to represent who should be able to call them.
+
+* A good strategy to start with is : Always start with making your APIs private if you don't think others will use it, then as you develope, expose them as you need to either public for other users or protected for child classes.
+
+This way we keep the "table" clean as possible.
+
+<a name="3.3.7"></a>
+<a name="bp-func-category"></a>
+#### 3.3.7 Categories ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+It makes it much easier to sort them into related groups based on the systems they relate to.
+Category is easily set in the Details pane, or by dragging the function into the category.
+
+![Category1](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-category1.png "Category1")
+![Category2](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-category2.png "Category2")
+
+<a name="3.3.8"></a>
+<a name="bp-func-const"></a>
+#### 3.3.8 Const Modifier![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+Set the Const checkbox on a function if it will not modify any variables or objects.
+* This should be done ONLY for functions which do not modify the state of the game in any way.
+* The guarantees that your function is safe. To do it, go to the Details panel and expand the list of checkboxes.
+![Func const](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-const.png "Func const")
+
+<a name="3.3.9"></a>
+<a name="bp-func-pure"></a>
+#### 3.3.9 Pure Modifier![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+Using the Pure checkbox -- only for Const Functions.
+* **You may additionally set the Pure checkbox**, which will hide the execution pin into the node, allowing you to position it inline.
+* **You should NEVER have a Pure function which is not Const.**
+* Pure function nodes are **re-run for each node to which they are connected**, guaranteeing that the value returned is current. If you are using the value returned more than once in a single function, in a single tick, **you should be saving the result off to a variable.**
+
+**Setting Pure means that this:**
+
+![Pure Old](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-pure2.png "Pure old")
+
+**Can become this:**
+
+![Pured](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-pure1.png "Pured")
+
 <a name="3.4"></a>
 <a name="bp-graphs"></a>
 ### 3.4 Blueprint Graphs ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
@@ -1148,6 +1238,20 @@ This section covers things that apply to all Blueprint graphs.
 #### 3.4.1 No Spaghetti ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
 
 Wires should have clear beginnings and ends. You should never have to mentally untangle wires to make sense of a graph. Many of the following sections are dedicated to reducing spaghetti.
+
+<a name="3.4.1.1"></a>
+<a name="Use Functions"></a>
+##### 3.4.1.1 Use Functions ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+It is often useful to descend immediately from Events into Functions - i.e. as soon as the event fires, like OnBeginOverlap, pipe any relevant inputs through to a Function call. This provides several benefits:
+
+* Automatic local variables inside functions
+* Clear scoping of functionality and data
+* Reusability of your function
+* The ability to return values
+* Functions categorized and listed conveniently in the My Blueprint pane
+* De-cluttering of the Event Graph, so we can easily find events listened to by this blueprint
+
+![Use Function](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-graphs-descend-to-func.png "Use Function")
 
 <a name="3.4.2"></a>
 <a name="bp-graphs-align-wires"></a>
@@ -1189,6 +1293,39 @@ This does not mean every cast node should have its failure handled. In many case
 #### 3.4.6 Graphs Should Not Have Any Dangling / Loose / Dead Nodes ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
 
 All nodes in all blueprint graphs must have a purpose. You should not leave dangling blueprint nodes around that have no purpose or are not executed.
+
+<a name="3.5"></a>
+<a name="bp-architecture"></a>
+### 3.5 Architecture ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+* **Avoid Casting to Expensive Blueprints:**
+
+ Whenever you cast to a Blueprint class BP_A (or declare it as a variable type on a function or other Blueprint) from BP_B it creates a load dependency on that Blueprint. Then if BP_A references four large Static Meshes and 20 sounds, every time you load BP_B it will have to load four large Static Meshes and 20 sounds, even if the cast would fail. This is one of the primary reasons it's essential to have either native base classes or minimal Blueprint base classes that define the important functions and variables. Then, you should make your expensive Blueprints as child classes.
+
+ E.g. BP_VRPlayerCharacter, BO_MotionController, BP_WeaponBase, ABP_AI_Basic, BP_AI_Basic, etc.
+
+* **Avoid Cyclical Blueprint References:**
+
+ Cyclical references (where a class references another class, which references the first class) are not a problem in C++ because of header files. But, excessive cyclical Blueprint references can make editor load and compile time worse. Similar to the above point, this can be improved by casting to C++ classes or cheaper Base Blueprint classes instead of doing casts (or having variable references) to expensive child Blueprints.
+
+ **To talk to another blueprint asset without creating a hard reference and loading it into memory, use an interface.** Save variables referring to other Blueprints as type Actor, and don’t cast them to the other type when you need to call a function on them -- have the other Blueprint implement an Interface that includes the function you need, and then send the function call as an “interface message”
+
+ **And remember**, same policy applies when editing the Interface as well. When you develope an Interface, you explicitly tells others this Interface is safe to use. Don't surprise them by sneaking more heavy references into the interface.
+
+ By right-clicking on an asset and using Reference Viewer (Alt-Shift-R) or Size Map (Alt-Shift-M) in the editor, you can view its Reference Graph and the Size Map of everything that loading or referencing it pulls into memory.
+![R6 Meme](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-architecture-reference-meme.png "R6 Meme")
+
+* **Be careful with user Structs and Enums:**
+
+ Enums and structs that are defined in C++ can be used both by C++ and Blueprints, but user structs/enums cannot be used in C++ and also cannot be manually fixed up as described in the save game section. Because you may want to move more of your gameplay logic to C++ over time we recommend implementing critical enums and structs in C++. Basically, if more than one or two Blueprints use something, it should probably be implemented in native C++.
+
+* **Think about Network Architecture:**
+
+ The specific network architecture of your game will have a substantial effect on the way you architect your classes. Generally, prototypes are not built with networking in mind, so when you start refactoring things to be "real" you need to think about what Actors are going to be replicating what data. You may need to make decisions that make things harder to iterate on in order to create a good flow for replicated data.
+
+* **Think about Async Loading:** As your game grows larger you will want to load assets on demand instead of loading everything up front when the game loads. Once you reach this point, you will need to start converting things to use Soft references or PrimaryAssetIds instead of Hard references. The AssetManager provides several functions to make it easier to async load assets and also exposes a StreamableManager that offers lower level functions.
+
+[References From Epic's website](https://docs.unrealengine.com/en-US/Resources/SampleGames/ARPG/BalancingBlueprintAndCPP/index.html)
 
 **[⬆ Back to Top](#table-of-contents)**
 
@@ -1294,9 +1431,9 @@ This section will focus on Level assets and their internals.
 
 > 6.2 [Lighting Should Be Built](#levels-lighting-should-be-built)
 
-> 6.3 [No Player Visible Z Fighting](#evels-no-visible-z-fighting)
+> 6.3 [No Player Visible Z Fighting](#levels-no-visible-z-fighting)
 
-> 6.4 [Marketplace Specific Rules](#evels-levels-mp-rules)
+> 6.4 [Level Blueprints and Events](#levels-scripts)
 
 <a name="6.1"></a>
 <a name="levels-no-errors-or-warnings"></a>
@@ -1321,30 +1458,19 @@ It is normal during development for levels to occasionally not have lighting bui
 Levels should not have any [z-fighting](https://en.wikipedia.org/wiki/Z-fighting) in all areas visible to the player.
 
 <a name="6.4"></a>
-<a name="levels-mp-rules"></a>
-### 6.4 Marketplace Specific Rules ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+<a name="levels-scripts"></a>
+### 6.4 Level Blueprints and Events ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
 
-If a project is to be sold on the UE4 Marketplace, it must follow these rules.
+Level blueprints should NOT directly set outside variables.
+* They should use custom events or functions to access.
 
-<a name="6.4.1"></a>
-<a name="levels-mp-rules-overview"></a>
-### 6.4.1 Overview Level ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+![bad](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-level-script-set-variable.png "bad")
+![good](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-level-script-set-variable-good.png "good")
 
-If your project contains assets that should be visualized or demoed, you must have a map within your project that contains the name "Overview".
+* Custom events, functions, and event dispatchers that are to be accessed by level blueprints are prefaced with LVL. This simply makes it quicker for Level Designers to find the functionality they need and know that it is appropriate for being called from levels.
 
-This overview map, if it is visualizing assets, should be set up according to [Epic's guidelines](http://help.epicgames.com/customer/en/portal/articles/2592186-marketplace-submission-guidelines-preparing-your-assets#Required%20Levels%20and%20Maps).
-
-For example, `InteractionComponent_Overview`.
-
-<a name="6.4.2"></a>
-<a name="levels-mp-rules-demo"></a>
-### 6.4.2 Demo Level ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
-
-If your project contains assets that should be demoed or come with some sort of tutorial, you must have a map within your project that contains the name "Demo". This level should also contain documentation within it in some form that illustrates how to use your project. See Epic's Content Examples project for good examples on how to do this.
-
-If your project is a gameplay mechanic or other form of system as opposed to an art pack, this can be the same as your "Overview" map.
-
-For example, `InteractionComponent_Overview_Demo`, `ExplosionKit_Demo`.
+![level call](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-level-script-call1.png "level call")
+![Use of level call](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-level-script-call2.png "Use of level call")
 
 **[⬆ Back to Top](#table-of-contents)**
 
