@@ -1415,7 +1415,7 @@ The “Event Tick” node in a Blueprint’s Event Graph will run every tick, an
 
 * **Logic for Event Tick should be colored red:**
 
-![Tick red](https://github.com/allar/ue4-style-guide/raw/master/images/bp-graphs-tick-red.png "Tick red")
+![Tick red](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-graphs-tick-red.png "Tick red")
 
 
 <a name="3.4.7.1"></a>
@@ -1426,7 +1426,7 @@ The “Event Tick” node in a Blueprint’s Event Graph will run every tick, an
 * The “Update” output will send out a values from Timeline’s graph every tick for use in your blueprint.
 * Timelines also allow you to visualize the effects of your value changing over time.
 
-![Timeline](https://github.com/allar/ue4-style-guide/raw/master/images/bp-graphs-tick-timeline.png "Timeline")
+![Timeline](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-graphs-tick-timeline.png "Timeline")
 
 Use A Custom Tick Interval, When Updating Every Frame Is Unnecessary
 * Consider editing the Class Defaults on your blueprint to change the tick interval if you only need to update state occasionally.
@@ -1436,7 +1436,7 @@ Instead of modifying and using Tick, it’s better to Set Timer By Event in Begi
 * This way you can keep Tick turned off (not-implemented) in your Blueprint
 * It will be clear how often the event will trigger, because the delay length is a parameter included in the Set Timer By Event node.
 
-![Custom Tick](https://github.com/allar/ue4-style-guide/raw/master/images/bp-graphs-tick-custom.png "Custom Tick")
+![Custom Tick](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-graphs-tick-custom.png "Custom Tick")
 
 <a name="3.5"></a>
 <a name="bp-architecture"></a>
