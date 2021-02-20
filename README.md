@@ -17,7 +17,8 @@ More technical documentation regarding Linter and the Style Guide can be found a
 
 ## Discuss This Style Guide
 
-Gamemakin LLC has a public Discord channel at http://discord.gamemak.in with a #linter channel if you'd like to discuss all things style guide and Linter plugin.
+Post questions, discussions at slack channel ***#r9-ue4-style-guide-discussion***.
+
 
 ## Important Terminology
 
@@ -1065,7 +1066,7 @@ Bad examples:
 
 Don't repeat your return value if the function name already says it well enough.
 
-For functions that ask questions, name the return value "Result" as default:
+For functions that ask one question or return one obvious value, name the return value `ReturnValue`(One word, UE4 will render it with proper spacings) as default, this echoes with most of the BP exposed APIs' naming conventions:
 
 ![Return value name](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-return-node.png "Return value name")
 
@@ -1100,19 +1101,19 @@ Bad examples:
 * `HandleMessage`
 * `HandleDeath`
 
-For events/functions that subscribe to Dispatchers, name them with `Handle` to replace the `On` from the Dispatcher's name:
-
-Good examples:
-
-* `HandleDeath`
-* `HandleMessageRecevied`
-
 Plus:
 
 * Always use `CreateEvent` node to minimize wires
 * Try use suffix to solve naming conflicts
+* Sometimes it's better to just give the dispatcher a more descriptive name to start with
 
-![Dispatcher Handler](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-function-dispatch-handler.png "Dispatcher Handler")
+Suffix for conflict namings:
+
+![Events with suffix](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-function-dispatch-handler-suffix.png "Events with suffix")
+
+Distinguished dispatcher names:
+
+![Events with descriptive names](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-function-dispatch-handler-naming.png "Events with descriptive names")
 
 
 <a name="3.3.1.5"></a>
@@ -1227,6 +1228,118 @@ Using the Pure checkbox -- only for Const Functions.
 
 ![Pured](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-pure1.png "Pured")
 
+
+<a name="3.3.10"></a>
+<a name="bp-func-sequence-node"></a>
+#### 3.3.10 Sequence Node![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+Use the Sequence node to group parts of your script that are functionally independent.
+
+![Sequence node1](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-sequence-node1.png "Sequence node1")
+
+![Sequence node2](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-sequence-node2.png "Sequence node2")
+
+![Sequence node3](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-sequence-node3.png "Sequence node3")
+
+* Sometimes it’s useful to put variable initialization into the first branch of a Sequence in a function call.
+* Do validation for parameters used throughout your Sequence **before** the Sequence -- because if you validate a parameter in “Then 0”, that won’t stop “Then 1” from running.
+
+<a name="3.3.10.1"></a>
+<a name="bp-func-sequence-node-tip1"></a>
+##### 3.3.10.1 Bear in mind that each Sequence node output is not dependent on previous outputs completing.![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+* This is the advantage, and the risk, of using Sequence.
+ *  If Then 1 shouldn’t run if Then 0 wasn’t successful, then you shouldn’t be using Sequence.
+ * If you want something specific to always happen at the end of your script regardless of what happened earlier, the final Sequence output is probably a good place to put it.
+
+
+* The only exception is the Return node, which will always exit from your function immediately, preventing execution of anything else in the Sequence. For that reason, it’s best to avoid using Return mid-script, as it makes the outcome of running a script less clear.
+
+<a name="3.3.10.2"></a>
+<a name="bp-func-sequence-node-tip2"></a>
+##### 3.3.10.2 Use Sequence to catch all failure cases below the primary path, whenever a function could fail at many points.![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+That way we only need to Return False (or other fail action) once, and the script is much clearer.
+
+![Sequence node tip2](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-sequence-node-tip2.png "Sequence node tip2")
+
+<a name="3.3.10.3"></a>
+<a name="bp-func-sequence-node-tip3"></a>
+##### 3.3.10.3 Be Aware That Sequences Proceed With Their Execution During Latency (Delays).![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+If you’re in the Event Graph, where it’s possible to use the Delay node, be aware that a Sequence node will keep running its remaining functionality during your delay.
+
+![Sequence node tip3](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-sequence-node-tip3.png "Sequence node tip3")
+
+This isn’t a problem when using loops such as “ForEachLoop” within a Sequence, as there is no latency within these loops (unless you explicitly add a delay node).
+
+<a name="3.3.11"></a>
+<a name="bp-func-select-node"></a>
+#### 3.3.11 Select Node![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+When doing essentially the same operation using different values, use Select instead of using a Branch or a Switch. It works with Bools, Enums, and even other types like Ints.
+
+Here’s the Branch version, with 2 flow paths:
+
+![Select node branch](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-select-node-branch.png "Select node branch")
+
+Here’s the Switch version, with 2 flow paths:
+
+![Select node switch](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-select-node-switch.png "Select node switch")
+
+And here’s the Select version, with no branching flow path required:
+
+![Select node select](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-select-node-select.png "Select node select")
+
+Initial select node's wildcard pins:
+
+![Select node wildcard](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-select-node-wildcard.png "Select node wildcard")
+
+* Also be careful about leaving references to BP classes in the value pins such as the `Class` pin above, when you manually feed some BP reference to it and then connect it to some node such as the select node's `Return Value`, it won't remove the reference to the previous class you put there. To clear the reference, you need to manually set it to None before you connect anything to it.
+
+<a name="3.3.12"></a>
+<a name="bp-func-parent-node"></a>
+#### 3.3.12 Parent Node![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+If you implement a function or an event (e.g. Event Tick, Begin Play, etc) on a child BP, it will override the implementation of the function on the parent BP. Call the parent function if you need to run the parent’s functionality in addition to the child’s.
+
+**When in doubt: Add Call to Parent Function!**
+
+* You should almost always add a call to the parent function from the child BP’s implementation of the overridden event, unless your specific intention was to replace, and not augment, the parent’s behavior.
+* Because parent functions sometimes contain logic either about initializing values before the function runs at the start, or about when the event / function is done, e.g. firing off an event dispatcher, you may need to be smart about whether to call the parent function at the start or the end of the child function. Make sure your child function works with the existing flow.
+* Add a call to the parent function by right-clicking on the event, like so:
+
+![Parent node1](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-parent-node1.png "Parent node1")
+
+![Parent node2](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-parent-node2.png "Parent node2")
+
+<a name="3.3.13"></a>
+<a name="bp-func-macro"></a>
+#### 3.3.13 Macro![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+Macros are similar to functions: they take inputs and can return outputs.
+
+* **Advantages:**
+ * They can have multiple execution flow outputs (grey lines).
+ * They can take Wildcard variables, which is a variable of any type provided to the macro. An example of this would be if you were writing an Array-modification macro that doesn’t care what’s actually in the array. You could use an array of Wildcards.
+ * Macros inside a Blueprint or a Level Blueprint (but not global Macros) can contain delays (“latent functionality”), whereas functions cannot.
+* **Disadvantages:**
+ * Unlike Functions, can’t use ordinary local variables.
+ * Cannot be overridden in child BPs like Functions.
+ * Can’t be called from external BPs like Functions.
+ * Do not debug as easily as Functions.
+ * Every use of a Macro inside a Blueprint is effectively compiled into its own little script.
+ * Can result in slower garbage collection due to larger numbers of Uproperties (each instance will create new copies of its local variables, as well as any inputs,  outputs, and local variables on macros nested within it). [ref.](https://www.youtube.com/watch?v=Ln8PCZfO18Y&t=2511)
+
+
+**Use macros specifically where you have a small piece of functionality with multiple output paths, or latent behavior (delays) that you imagine will need to be frequently used in the game.**
+
+For instance, here’s the `TestAndConsumeBool` macro. It can be used wherever a blueprint has a bool that it needs to check. If it is true, it will set the bool false and allow execution to continue. If it is already false, it will not allow execution to continue on the main path.
+
+![macro](https://github.com/lei-r9/ue4-style-guide/raw/master/images/bp-funcs-macro.png "macro")
+
+In general, your Blueprints should use Functions, not Macros. Most Macros that are useful should live in a global Macro Library for use across the game. If it’s not globally applicable enough to be in that library, it probably shouldn’t be a Macro.
+
 <a name="3.4"></a>
 <a name="bp-graphs"></a>
 ### 3.4 Blueprint Graphs ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
@@ -1293,6 +1406,37 @@ This does not mean every cast node should have its failure handled. In many case
 #### 3.4.6 Graphs Should Not Have Any Dangling / Loose / Dead Nodes ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
 
 All nodes in all blueprint graphs must have a purpose. You should not leave dangling blueprint nodes around that have no purpose or are not executed.
+
+<a name="3.4.7"></a>
+<a name="bp-graphs-tick"></a>
+#### 3.4.7 Tick ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+The “Event Tick” node in a Blueprint’s Event Graph will run every tick, and it is an expensive operation.
+
+* **Logic for Event Tick should be colored red:**
+
+![Tick red](https://github.com/allar/ue4-style-guide/raw/master/images/bp-graphs-tick-red.png "Tick red")
+
+
+<a name="3.4.7.1"></a>
+<a name="bp-graphs-tick-avoid"></a>
+#### 3.4.7.1 Avoid using Tick when possible. ![#](https://img.shields.io/badge/lint-unsupported-red.svg)
+
+* Use Timelines instead (unless you already have a Tick node in use, or need multiple timelines).
+* The “Update” output will send out a values from Timeline’s graph every tick for use in your blueprint.
+* Timelines also allow you to visualize the effects of your value changing over time.
+
+![Timeline](https://github.com/allar/ue4-style-guide/raw/master/images/bp-graphs-tick-timeline.png "Timeline")
+
+Use A Custom Tick Interval, When Updating Every Frame Is Unnecessary
+* Consider editing the Class Defaults on your blueprint to change the tick interval if you only need to update state occasionally.
+* If using a Timeline, get a reference to the timeline and then call the Set Component Tick Interval function to adjust tick interval.
+
+Instead of modifying and using Tick, it’s better to Set Timer By Event in Begin Play, with Looping checked
+* This way you can keep Tick turned off (not-implemented) in your Blueprint
+* It will be clear how often the event will trigger, because the delay length is a parameter included in the Set Timer By Event node.
+
+![Custom Tick](https://github.com/allar/ue4-style-guide/raw/master/images/bp-graphs-tick-custom.png "Custom Tick")
 
 <a name="3.5"></a>
 <a name="bp-architecture"></a>
