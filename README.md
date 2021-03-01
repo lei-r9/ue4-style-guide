@@ -1,5 +1,8 @@
 # [Gamemakin](https://gamemak.in) UE4 Style Guide() {
-## R9 Edition
+## R9 Edition<br>
+This doc also integrates R8's blueprint guides. [Here](https://docs.google.com/document/d/1BZVeBQRPhVA91bGGtiKohOdVI0aV5UhJnhbapgkp6R8/edit) is a copy of it.
+
+----------------------------------------------------------------------------------------------------------------------------
 
 *A mostly reasonable approach to Unreal Engine 4*
 
@@ -9,9 +12,7 @@ Heavily inspired by the [Airbnb Javascript Style Guide](https://github.com/airbn
 
 ## Unreal Engine 4 Linter Plugin
 
-An automated method of checking your project against this style guide is available for free at [the Unreal Engine marketplace](https://www.unrealengine.com/marketplace/linter-v2).
-
-In order to use with UE4 without building the engine from source code, please use the marketplace version.
+An automated method of checking your project against this style guide is added to project.
 
 ## Linter and Style Guide Documentation
 
